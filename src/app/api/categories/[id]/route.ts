@@ -1,35 +1,19 @@
-// src/app/api/categories/[id]/route.ts
-import { prisma } from "@/lib/prisma";
-import { headers } from "next/headers";
-import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
-
+import { prisma } from "@/lib/prisma";
+import { getUserId } from "@/lib/get-user";
 
 export const runtime = "nodejs";
 
-async function getUserIdFromHeaders() {
-  try {
-    const h = await headers();
-    const authHeader = h.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) return null;
-    const token = authHeader.slice(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    return decoded.userId as string;
-  } catch {
-    return null;
-  }
-}
-
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const userId = await getUserIdFromHeaders();
+  const userId = await getUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const categoryId = params.id;
+  const categoryId = context.params.id;
 
   try {
     const category = await prisma.category.findUnique({
@@ -43,13 +27,11 @@ export async function DELETE(
       );
     }
 
-    // 1) Отвязываем транзакции от категории
     await prisma.transaction.updateMany({
       where: { categoryId, userId },
       data: { categoryId: null },
     });
 
-    // 2) Удаляем категорию
     await prisma.category.delete({
       where: { id: categoryId },
     });

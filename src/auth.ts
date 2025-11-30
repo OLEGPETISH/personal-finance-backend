@@ -4,12 +4,13 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const runtime = "nodejs";
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
 
-  session: {
-    strategy: "database",
-  },
+  // В v5 нет session.strategy — всегда JWT по умолчанию
+  session: { maxAge: 30 * 24 * 60 * 60 },
 
   providers: [
     Google({
@@ -19,9 +20,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id; // теперь TS знает, что id существует
+    async session({ session, token }) {
+      if (session.user && token?.sub) {
+        // Добавляем id пользователя
+        (session.user as any).id = token.sub;
       }
       return session;
     },

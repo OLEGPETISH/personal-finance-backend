@@ -1,19 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserId } from "@/lib/get-user";
 
 export const runtime = "nodejs";
 
 export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   const userId = await getUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const categoryId = context.params.id;
+  const { id: categoryId } = await context.params;
 
   try {
     const category = await prisma.category.findUnique({
@@ -28,7 +28,7 @@ export async function DELETE(
     }
 
     await prisma.transaction.updateMany({
-      where: { categoryId, userId },
+      where: { userId, categoryId },
       data: { categoryId: null },
     });
 

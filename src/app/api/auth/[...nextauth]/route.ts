@@ -1,7 +1,3 @@
-export const runtime = "nodejs";
+// src/app/api/auth/[...nextauth]/route.ts
 
-import { handlers } from "@/auth";
-
-// экспортируем методы, которые NextAuth сам создаёт
-export const GET = handlers.GET;
-export const POST = handlers.POST;
+export { handlers as GET, handlers as POST } from "@/auth";

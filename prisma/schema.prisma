@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String?
+  password      String?   // <-- Добавь это поле если его нет
+
+  email         String?    @unique
+  emailVerified DateTime?
+  image         String?
+
+  accounts      Account[]
+  sessions      Session[]
+
+  categories    Category[]
+  transactions  Transaction[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  user               User    @relation(fields: [userId], references: [id])
+
+  type               String
+  provider           String
+  providerAccountId  String
+
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  expires      DateTime
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+model Category {
+  id            String         @id @default(cuid())
+  name          String
+  type          CategoryType
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+}
+
+model Transaction {
+  id         String           @id @default(cuid())
+  amount     Float
+  type       TransactionType
+  date       DateTime         @default(now())
+  note       String?
+
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @default(now()) @updatedAt 
+
+  categoryId String?
+  category   Category?        @relation(fields: [categoryId], references: [id])
+
+  userId     String
+  user       User             @relation(fields: [userId], references: [id])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}

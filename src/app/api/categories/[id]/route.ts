@@ -4,11 +4,12 @@ import { headers } from "next/headers";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
+
 export const runtime = "nodejs";
 
 async function getUserIdFromHeaders() {
   try {
-    const h = headers();
+    const h = await headers();
     const authHeader = h.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) return null;
     const token = authHeader.slice(7);

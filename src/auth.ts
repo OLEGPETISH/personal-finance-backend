@@ -4,16 +4,8 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
-export const {
-  auth,
-  handlers,
-  signIn,
-  signOut,
-} = NextAuth({
+export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-
-  // важно для React Native и прямых API-запросов
-  trustHost: true,
 
   session: {
     strategy: "database",
@@ -28,9 +20,8 @@ export const {
 
   callbacks: {
     async session({ session, user }) {
-      if (session.user && user) {
-        // Прокидываем user.id в session
-        session.user.id = user.id;
+      if (session.user) {
+        session.user.id = user.id; // теперь TS знает, что id существует
       }
       return session;
     },

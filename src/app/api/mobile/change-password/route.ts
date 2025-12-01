@@ -29,10 +29,20 @@ export async function PUT(req: Request) {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = decoded.userId;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    // ✔ исправлено — теперь Prisma возвращает password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        password: true, // ← добавлено
+      },
+    });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
     if (!user.password) {
